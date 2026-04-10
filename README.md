@@ -1,4 +1,4 @@
-# 🎬 TubeAI — Analyseur de chaîne YouTube propulsé par Claude AI
+# 🎬 TubeAI — Analyseur de chaîne YouTube propulsé par Gemini AI
 
 ![TubeAI Preview](https://img.shields.io/badge/Claude-AI%20Powered-red?style=flat-square) ![YouTube](https://img.shields.io/badge/YouTube%20API-v3-red?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square) ![No Backend](https://img.shields.io/badge/No%20Backend-100%25%20Client--Side-blue?style=flat-square)
 
@@ -70,7 +70,7 @@ L'app nécessite **2 clés API** saisies directement dans l'interface :
 
 ### 2. Clé API Anthropic (Claude)
 
-1. Crée un compte sur [console.anthropic.com](https://console.anthropic.com/)
+1. Crée un compte sur [aistudio.google.com](https://aistudio.google.com/)
 2. Paramètres → API Keys → **Créer une clé**
 3. Assure-toi d'avoir du crédit sur ton compte
 
@@ -96,7 +96,7 @@ tubeai/
 |-------------|-------|
 | HTML/CSS/JS vanilla | Aucune dépendance, aucun build |
 | [YouTube Data API v3](https://developers.google.com/youtube/v3) | Statistiques chaîne & vidéos |
-| [Anthropic API (Claude Sonnet)](https://docs.anthropic.com/) | Conseils IA & génération de titres |
+| [Google Gemini API](https://docs.anthropic.com/) | Conseils IA & génération de titres |
 | Google Fonts (Bebas Neue + DM Sans) | Typographie |
 
 ---
@@ -114,7 +114,7 @@ L'app accepte plusieurs formats d'URL :
 Un Short est détecté si la durée ISO 8601 de la vidéo est ≤ 60 secondes.
 
 ### Appels API Claude
-Les appels se font directement depuis le navigateur vers `api.anthropic.com/v1/messages` avec l'en-tête `anthropic-dangerous-direct-browser-access: true` (usage personnel / développement uniquement).
+Les appels se font directement depuis le navigateur vers `api.anthropic.com/v1/messages` avec l'en-tête `
 
 ---
 
@@ -153,4 +153,4 @@ Les PRs sont les bienvenues ! Idées de features :
 
 ---
 
-*Fait avec ❤️ et Claude AI*
+*Fait avec ❤️ et Gemini AI*
