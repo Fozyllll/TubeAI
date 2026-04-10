@@ -1,33 +1,11 @@
 /* ======================
-   TubeAI — Application
-   Propulsé par Gemini AI (Google — GRATUIT)
+   TubeAI v2 — Application
+   Propulsé par Claude AI (Anthropic)
    ====================== */
 
-// ── KEYS MANAGEMENT ─────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
-function loadKeys() {
-  $('ytKey').value = localStorage.getItem('tubeai_yt_key') || '';
-  $('geminiKey').value = localStorage.getItem('tubeai_gemini_key') || '';
-}
-
-$('saveKeys').addEventListener('click', () => {
-  const yt = $('ytKey').value.trim();
-  const gm = $('geminiKey').value.trim();
-  if (!yt || !gm) { showToast('⚠️ Remplis les deux clés !'); return; }
-  localStorage.setItem('tubeai_yt_key', yt);
-  localStorage.setItem('tubeai_gemini_key', gm);
-  showToast('✅ Clés sauvegardées !');
-});
-
-function getKeys() {
-  return {
-    yt: localStorage.getItem('tubeai_yt_key') || '',
-    gemini: localStorage.getItem('tubeai_gemini_key') || ''
-  };
-}
-
-// ── UTILS ────────────────────────────────────────────────────────────
+// ── UTILS ─────────────────────────────────────────────────────────────
 function formatNumber(n) {
   n = parseInt(n) || 0;
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -54,13 +32,73 @@ function setLoading(visible, msg = 'Chargement...') {
 
 async function copyText(text, btn) {
   await navigator.clipboard.writeText(text);
-  const orig = btn.textContent;
-  btn.textContent = '✓';
-  setTimeout(() => (btn.textContent = orig), 1500);
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => (btn.textContent = orig), 1500);
+  }
   showToast('📋 Copié !');
 }
 
-// ── EXTRACT CHANNEL ID / HANDLE ──────────────────────────────────────
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.hidden = true);
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  $(tabId).hidden = false;
+  const idx = ['tab-videos','tab-charts','tab-ideas','tab-ai'].indexOf(tabId);
+  document.querySelectorAll('.tab-btn')[idx]?.classList.add('active');
+  if (tabId === 'tab-charts' && window._chartData) renderCharts(window._chartData);
+}
+
+// ── KEYS MANAGEMENT ─────────────────────────────────────────────────
+function loadKeys() {
+  const yt = localStorage.getItem('tubeai_yt_key') || '';
+  const cl = localStorage.getItem('tubeai_claude_key') || '';
+  $('ytKey').value = yt;
+  $('claudeKey').value = cl;
+  updateKeyStatus('yt', yt);
+  updateKeyStatus('claude', cl);
+}
+
+function updateKeyStatus(type, value) {
+  const dot = $(type + 'Dot');
+  const status = $(type + 'Status');
+  if (value) {
+    dot.classList.add('saved');
+    dot.classList.remove('missing');
+    status.textContent = 'Sauvegardée ✓';
+    status.style.color = '#4ade80';
+  } else {
+    dot.classList.remove('saved');
+    dot.classList.add('missing');
+    status.textContent = 'Non sauvegardée';
+    status.style.color = 'var(--grey-400)';
+  }
+}
+
+$('saveKeys').addEventListener('click', () => {
+  const yt = $('ytKey').value.trim();
+  const cl = $('claudeKey').value.trim();
+  if (!yt || !cl) { showToast('⚠️ Remplis les deux clés !'); return; }
+  localStorage.setItem('tubeai_yt_key', yt);
+  localStorage.setItem('tubeai_claude_key', cl);
+  updateKeyStatus('yt', yt);
+  updateKeyStatus('claude', cl);
+  showToast('✅ Clés sauvegardées !');
+});
+
+function getKeys() {
+  return {
+    yt: localStorage.getItem('tubeai_yt_key') || '',
+    claude: localStorage.getItem('tubeai_claude_key') || ''
+  };
+}
+
+// ── EXTRACT CHANNEL ──────────────────────────────────────────────────
 function parseChannelUrl(url) {
   url = url.trim();
   const handleMatch = url.match(/youtube\.com\/@([^/?&]+)/);
@@ -88,12 +126,8 @@ async function ytFetch(endpoint, params, key) {
 
 async function resolveChannelId(parsed, key) {
   if (parsed.type === 'id') return parsed.value;
-  const data = await ytFetch('search', {
-    part: 'snippet', type: 'channel', q: parsed.value, maxResults: 1
-  }, key);
-  if (data.items && data.items.length > 0) {
-    return data.items[0].snippet.channelId;
-  }
+  const data = await ytFetch('search', { part: 'snippet', type: 'channel', q: parsed.value, maxResults: 1 }, key);
+  if (data.items && data.items.length > 0) return data.items[0].snippet.channelId;
   throw new Error('Chaîne introuvable. Vérifie le lien.');
 }
 
@@ -101,16 +135,12 @@ async function fetchChannelStats(channelId, key) {
   return ytFetch('channels', { part: 'snippet,statistics,brandingSettings', id: channelId }, key);
 }
 
-async function fetchRecentVideos(channelId, key, maxResults = 10) {
+async function fetchRecentVideos(channelId, key, maxResults = 12) {
   const ch = await ytFetch('channels', { part: 'contentDetails', id: channelId }, key);
   const uploadsId = ch.items[0].contentDetails.relatedPlaylists.uploads;
-  const pl = await ytFetch('playlistItems', {
-    part: 'snippet,contentDetails', playlistId: uploadsId, maxResults
-  }, key);
+  const pl = await ytFetch('playlistItems', { part: 'snippet,contentDetails', playlistId: uploadsId, maxResults }, key);
   const videoIds = pl.items.map(i => i.contentDetails.videoId).join(',');
-  const details = await ytFetch('videos', {
-    part: 'snippet,statistics,contentDetails', id: videoIds
-  }, key);
+  const details = await ytFetch('videos', { part: 'snippet,statistics,contentDetails', id: videoIds }, key);
   return details.items;
 }
 
@@ -120,11 +150,10 @@ function isShort(video) {
   if (!match) return false;
   const h = parseInt(match[1] || 0);
   const m = parseInt(match[2] || 0);
-  const s = parseInt(match[3] || 0);
-  return h === 0 && m === 0 && s <= 60;
+  return h === 0 && m < 2;
 }
 
-// ── RENDER CHANNEL CARD ──────────────────────────────────────────────
+// ── RENDER ───────────────────────────────────────────────────────────
 function renderChannelCard(ch) {
   const s = ch.snippet;
   const thumb = s.thumbnails?.high?.url || s.thumbnails?.default?.url || '';
@@ -164,7 +193,7 @@ function renderVideos(videos) {
     const short = isShort(v);
     const thumb = s.thumbnails?.medium?.url || '';
     return `
-      <div class="video-item">
+      <div class="video-item" onclick="window.open('https://youtube.com/watch?v=${v.id}','_blank')">
         <img class="video-thumb" src="${thumb}" alt="${s.title}" loading="lazy" />
         <div class="video-info">
           <div class="video-title">${s.title}</div>
@@ -181,32 +210,70 @@ function renderVideos(videos) {
   }).join('');
 }
 
-// ── GEMINI API (GRATUIT) ─────────────────────────────────────────────
-// Clé gratuite sur https://aistudio.google.com/app/apikey
-// Limites gratuites : 250 req/jour, 10 RPM — largement suffisant !
-async function callGemini(prompt, geminiKey) {
-  const model = 'gemini-2.0-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+// ── CHARTS ───────────────────────────────────────────────────────────
+let chartInstances = {};
 
-  const res = await fetch(url, {
+function renderCharts(videos) {
+  const labels = videos.map((v, i) => `V${i+1}`);
+  const views = videos.map(v => parseInt(v.statistics.viewCount) || 0);
+  const likes = videos.map(v => parseInt(v.statistics.likeCount) || 0);
+  const comments = videos.map(v => parseInt(v.statistics.commentCount) || 0);
+  const engagement = views.map((v, i) => v > 0 ? (((likes[i] + comments[i]) / v) * 100).toFixed(2) : 0);
+
+  const chartConfig = (data, color, label) => ({
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label, data, backgroundColor: color + '99', borderColor: color, borderWidth: 2, borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#252525' } },
+        y: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#252525' } }
+      }
+    }
+  });
+
+  const pairs = [
+    ['chartViews', views, '#ff2d2d', 'Vues'],
+    ['chartLikes', likes, '#a855f7', 'Likes'],
+    ['chartComments', comments, '#e8ff47', 'Commentaires'],
+    ['chartEngagement', engagement, '#4ade80', 'Engagement %']
+  ];
+
+  pairs.forEach(([id, data, color, label]) => {
+    if (chartInstances[id]) chartInstances[id].destroy();
+    const ctx = $(id).getContext('2d');
+    chartInstances[id] = new Chart(ctx, chartConfig(data, color, label));
+  });
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────
+async function callClaude(prompt, claudeKey) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': claudeKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.8, maxOutputTokens: 1500 }
+      model: 'claude-opus-4-5',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
     })
   });
 
-  const data = await res.json();
+  const data = await response.json();
   if (data.error) throw new Error(data.error.message);
-
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Réponse Gemini vide. Vérifie ta clé.');
-  return text;
+  return data.content?.[0]?.text || '';
 }
 
 // ── RENDER AI ADVICE ─────────────────────────────────────────────────
-function renderAiAdvice(markdown) {
+function renderMarkdown(markdown, targetId) {
   let html = markdown
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h3>$1</h3>')
@@ -217,17 +284,17 @@ function renderAiAdvice(markdown) {
     .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
     .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hul])(.+)$/gm, (m, p) => p ? `<p>${p}</p>` : m);
-  $('aiContent').innerHTML = html;
+  $(targetId).innerHTML = html;
 }
 
-// ── ANALYZE CHANNEL ──────────────────────────────────────────────────
+// ── ANALYZE ──────────────────────────────────────────────────────────
 $('analyzeBtn').addEventListener('click', analyzeChannel);
 $('channelUrl').addEventListener('keydown', e => { if (e.key === 'Enter') analyzeChannel(); });
 
 async function analyzeChannel() {
-  const { yt, gemini } = getKeys();
-  if (!yt) { showToast('❗ Ajoute ta clé YouTube dans la section Config'); return; }
-  if (!gemini) { showToast('❗ Ajoute ta clé Gemini dans la section Config'); return; }
+  const { yt, claude } = getKeys();
+  if (!yt) { showToast('❗ Ajoute ta clé YouTube dans Config'); return; }
+  if (!claude) { showToast('❗ Ajoute ta clé Claude (Anthropic) dans Config'); return; }
 
   const url = $('channelUrl').value.trim();
   if (!url) { showToast('⚠️ Colle un lien YouTube !'); return; }
@@ -240,15 +307,13 @@ async function analyzeChannel() {
 
   try {
     const channelId = await resolveChannelId(parsed, yt);
-
     setLoading(true, 'Chargement des statistiques...');
     const [chData, videos] = await Promise.all([
       fetchChannelStats(channelId, yt),
-      fetchRecentVideos(channelId, yt, 10)
+      fetchRecentVideos(channelId, yt, 12)
     ]);
 
     if (!chData.items || chData.items.length === 0) throw new Error('Chaîne introuvable.');
-
     const ch = chData.items[0];
     setLoading(false);
 
@@ -257,8 +322,18 @@ async function analyzeChannel() {
     renderStats(ch.statistics);
     renderVideos(videos);
 
+    window._chartData = videos;
+    showTab('tab-videos');
+
     setTimeout(() => $('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    generateAiAdvice(ch, videos, gemini);
+
+    // Lance les analyses IA en parallèle
+    setLoading(true, 'Claude analyse ta chaîne...');
+    await Promise.all([
+      generateAiAdvice(ch, videos, claude),
+      generateVideoIdeas(ch, videos, claude)
+    ]);
+    setLoading(false);
 
   } catch (err) {
     setLoading(false);
@@ -267,52 +342,111 @@ async function analyzeChannel() {
   }
 }
 
-async function generateAiAdvice(ch, videos, geminiKey) {
+async function generateAiAdvice(ch, videos, claudeKey) {
   const stats = ch.statistics;
   const avgViews = stats.videoCount > 0
     ? Math.round(parseInt(stats.viewCount) / parseInt(stats.videoCount)) : 0;
 
-  const videoSummary = videos.slice(0, 5).map(v => ({
+  const videoSummary = videos.slice(0, 6).map(v => ({
     titre: v.snippet.title,
     vues: v.statistics.viewCount,
     likes: v.statistics.likeCount,
+    commentaires: v.statistics.commentCount,
     short: isShort(v)
   }));
 
   const prompt = `Tu es un expert en croissance de chaînes YouTube. Analyse cette chaîne et donne des conseils détaillés et actionnables.
 
-DONNÉES DE LA CHAÎNE :
+DONNÉES :
 - Nom : ${ch.snippet.title}
 - Description : ${ch.snippet.description?.slice(0, 300) || 'N/A'}
 - Abonnés : ${stats.subscriberCount}
 - Vues totales : ${stats.viewCount}
-- Nombre de vidéos : ${stats.videoCount}
-- Vues moyennes par vidéo : ${avgViews}
+- Vidéos : ${stats.videoCount}
+- Vues moy/vidéo : ${avgViews}
 - Pays : ${ch.snippet.country || 'N/A'}
-- Date de création : ${ch.snippet.publishedAt}
+- Créée le : ${ch.snippet.publishedAt}
 
-DERNIÈRES VIDÉOS (5 premières) :
+DERNIÈRES VIDÉOS :
 ${JSON.stringify(videoSummary, null, 2)}
 
-Fournis une analyse structurée avec :
+Fournis une analyse en français avec :
 1. **Résumé de la chaîne** (forces, positionnement)
-2. **Points forts** (ce qui fonctionne bien)
-3. **Axes d'amélioration** (3-5 conseils précis et actionnables)
-4. **Stratégie de contenu** recommandée (fréquence, formats, sujets)
-5. **Taux d'engagement estimé** et ce que ça signifie
-6. **Priorité n°1** : l'action la plus importante à faire maintenant
+2. **Points forts** (ce qui fonctionne)
+3. **Axes d'amélioration** (3-5 conseils précis)
+4. **Stratégie de contenu** (fréquence, formats, sujets)
+5. **Taux d'engagement** et signification
+6. **Priorité n°1** : action la plus importante maintenant
 
-Réponds en français, sois direct et percutant. Base-toi sur les vraies données.`;
+Sois direct, percutant, basé sur les vraies données.`;
 
   try {
-    const advice = await callGemini(prompt, geminiKey);
-    renderAiAdvice(advice);
+    const advice = await callClaude(prompt, claudeKey);
+    renderMarkdown(advice, 'aiContent');
   } catch (err) {
-    $('aiContent').innerHTML = `<p style="color:#ff6b6b">Erreur Gemini : ${err.message}</p>`;
+    $('aiContent').innerHTML = `<p style="color:#ff6b6b">Erreur Claude : ${err.message}</p>`;
   }
 }
 
-// ── VIDEO TITLE + HASHTAG GENERATOR ─────────────────────────────────
+async function generateVideoIdeas(ch, videos, claudeKey) {
+  const recentTitles = videos.slice(0, 8).map(v => v.snippet.title);
+  const topVideo = [...videos].sort((a,b) => parseInt(b.statistics.viewCount) - parseInt(a.statistics.viewCount))[0];
+
+  const prompt = `Tu es un stratège de contenu YouTube expert. Génère des idées de vidéos percutantes pour cette chaîne.
+
+CHAÎNE : ${ch.snippet.title}
+ABONNÉS : ${ch.statistics.subscriberCount}
+DESCRIPTION : ${ch.snippet.description?.slice(0, 200) || 'N/A'}
+VIDÉO LA PLUS VUE : "${topVideo?.snippet.title || 'N/A'}" (${topVideo?.statistics.viewCount || 0} vues)
+DERNIÈRES VIDÉOS :
+${recentTitles.map(t => '- ' + t).join('\n')}
+
+Génère exactement 8 idées de vidéos. Pour chaque idée, réponds STRICTEMENT en JSON avec ce format (un objet par ligne, sans markdown) :
+{"type":"Long","titre":"Titre accrocheur ici","pourquoi":"Raison courte pourquoi ça va marcher (1 phrase)"}
+
+Types possibles : "Long", "Short", "Série", "Tuto", "Challenge", "Réaction"
+Génère des idées variées, originales et adaptées à la niche de la chaîne.
+Réponds UNIQUEMENT avec les 8 lignes JSON, rien d'autre.`;
+
+  try {
+    const result = await callClaude(prompt, claudeKey);
+    renderVideoIdeas(result);
+  } catch (err) {
+    $('ideasContent').innerHTML = `<p style="color:#ff6b6b">Erreur Claude : ${err.message}</p>`;
+  }
+}
+
+function renderVideoIdeas(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim().startsWith('{'));
+  const ideas = lines.map(l => {
+    try { return JSON.parse(l); } catch { return null; }
+  }).filter(Boolean);
+
+  if (!ideas.length) {
+    $('ideasContent').innerHTML = `<p style="color:#888">Impossible de parser les idées. Réessaie.</p>`;
+    return;
+  }
+
+  const typeColors = {
+    'Long': '#ff2d2d', 'Short': '#a855f7', 'Série': '#e8ff47',
+    'Tuto': '#4ade80', 'Challenge': '#fb923c', 'Réaction': '#38bdf8'
+  };
+
+  $('ideasContent').innerHTML = `
+    <div class="ideas-grid">
+      ${ideas.map(idea => `
+        <div class="idea-card">
+          <div class="idea-type" style="color:${typeColors[idea.type] || '#e8ff47'}">${idea.type}</div>
+          <div class="idea-title">${idea.titre}</div>
+          <div class="idea-why">${idea.pourquoi}</div>
+          <button class="idea-copy" onclick="copyText('${idea.titre.replace(/'/g,"\\'")}', this)">📋 Copier le titre</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ── VIDEO TITLE TOOL ─────────────────────────────────────────────────
 let contentType = 'video';
 
 $('btnVideo').addEventListener('click', () => {
@@ -330,8 +464,8 @@ $('btnShort').addEventListener('click', () => {
 $('generateBtn').addEventListener('click', generateTitleAndTags);
 
 async function generateTitleAndTags() {
-  const { gemini } = getKeys();
-  if (!gemini) { showToast('❗ Ajoute ta clé Gemini dans la section Config'); return; }
+  const { claude } = getKeys();
+  if (!claude) { showToast('❗ Ajoute ta clé Claude dans Config'); return; }
 
   const desc = $('videoDesc').value.trim();
   if (!desc) { showToast('⚠️ Décris ta vidéo !'); return; }
@@ -341,45 +475,43 @@ async function generateTitleAndTags() {
   const isShortContent = contentType === 'short';
 
   $('generateBtn').disabled = true;
-  $('generateBtn').textContent = 'Gemini génère... ✨';
+  $('generateBtn').textContent = 'Claude génère... ✨';
   $('genOutput').hidden = true;
 
-  const prompt = `Tu es un expert en optimisation YouTube et en copywriting viral.
+  const prompt = `Tu es un expert en optimisation YouTube et copywriting viral.
 
-TYPE DE CONTENU : ${isShortContent ? 'YouTube SHORT (format vertical, max 60 secondes)' : 'Vidéo YouTube longue'}
-NICHE / DOMAINE : ${niche || 'Non précisé'}
-SUJET DE LA VIDÉO : ${desc}
-LANGUE DE SORTIE : ${lang}
+TYPE : ${isShortContent ? 'YouTube SHORT (vertical, max 60s)' : 'Vidéo YouTube longue'}
+NICHE : ${niche || 'Non précisé'}
+SUJET : ${desc}
+LANGUE : ${lang}
 
-Ta mission :
-1. Génère EXACTEMENT 3 titres YouTube optimisés pour le CTR.
-   - Vidéo longue : 40-70 caractères, accrocheurs, curiosité ou émotion
-   - Short : 30-50 caractères, percutant, ultra-direct
-   - Chaque titre sur une nouvelle ligne préfixé par "TITRE: "
+Génère :
+1. EXACTEMENT 3 titres optimisés pour le CTR.
+   - Vidéo longue : 40-70 caractères, accrocheurs
+   - Short : 30-50 caractères, percutant
+   - Format : "TITRE: [titre ici]" (un par ligne)
 
-${isShortContent ? `2. Génère EXACTEMENT 15 hashtags optimisés pour les Shorts YouTube.
-   - Mélange hashtags génériques populaires + hashtags de niche
-   - Chaque hashtag sur une nouvelle ligne préfixé par "TAG: "
+${isShortContent ? `2. EXACTEMENT 15 hashtags pour les Shorts.
+   - Format : "TAG: #hashtag" (un par ligne)
 
-` : ''}3. Explique en 2-3 phrases POURQUOI ces titres fonctionnent.
-   Préfixe cette section par "EXPLICATION: "
+` : ''}3. Explication en 2-3 phrases pourquoi ces titres fonctionnent.
+   Format : "EXPLICATION: [texte]"
 
-Réponds UNIQUEMENT avec ce format structuré, rien d'autre.`;
+Réponds UNIQUEMENT avec ce format, rien d'autre.`;
 
   try {
-    const result = await callGemini(prompt, gemini);
+    const result = await callClaude(prompt, claude);
     parseAndRenderGenOutput(result, isShortContent);
   } catch (err) {
-    showToast('❌ Erreur Gemini : ' + err.message, 4000);
+    showToast('❌ Erreur Claude : ' + err.message, 4000);
   } finally {
     $('generateBtn').disabled = false;
-    $('generateBtn').textContent = 'Générer avec Gemini AI ✨';
+    $('generateBtn').textContent = 'Générer avec Claude AI ✨';
   }
 }
 
 function parseAndRenderGenOutput(text, isShortContent) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
   const titles = lines.filter(l => l.startsWith('TITRE:')).map(l => l.replace('TITRE:', '').trim());
   const tags = lines.filter(l => l.startsWith('TAG:')).map(l => l.replace('TAG:', '').trim());
   const explication = lines.filter(l => l.startsWith('EXPLICATION:')).map(l => l.replace('EXPLICATION:', '').trim()).join(' ');
@@ -388,7 +520,7 @@ function parseAndRenderGenOutput(text, isShortContent) {
     ? titles.map(t => `
         <div class="gen-title-item">
           <span>${t}</span>
-          <button class="copy-btn" onclick="copyText('${t.replace(/'/g,"\\'")}', this)">📋</button>
+          <button class="copy-btn" onclick="copyText('${t.replace(/'/g,"\\'")}', this)">📋 Copier</button>
         </div>
       `).join('')
     : '<p style="color:#888">Aucun titre généré. Réessaie.</p>';
@@ -410,5 +542,5 @@ function parseAndRenderGenOutput(text, isShortContent) {
 
 // ── INIT ─────────────────────────────────────────────────────────────
 loadKeys();
-console.log('%cTubeAI 🎬', 'font-size:24px; color:#ff2d2d; font-weight:bold');
-console.log('Propulsé par Gemini AI (GRATUIT) — https://aistudio.google.com/app/apikey');
+console.log('%cTubeAI v2 🎬', 'font-size:24px; color:#ff2d2d; font-weight:bold');
+console.log('Propulsé par
