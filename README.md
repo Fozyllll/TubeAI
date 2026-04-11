@@ -1,90 +1,131 @@
-# 🎬 TubeAI — Analyseur de chaîne YouTube propulsé par Gemini AI
+# 🎬 TubeAI — YouTube Intelligence
 
-![TubeAI Preview](https://img.shields.io/badge/Claude-AI%20Powered-red?style=flat-square) ![YouTube](https://img.shields.io/badge/YouTube%20API-v3-red?style=flat-square) ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square) ![No Backend](https://img.shields.io/badge/No%20Backend-100%25%20Client--Side-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-5.0-red?style=flat-square)
+![Groq AI](https://img.shields.io/badge/Groq%20AI-LLaMA%203.3-orange?style=flat-square)
+![YouTube API](https://img.shields.io/badge/YouTube%20API-v3-red?style=flat-square)
+![No Backend](https://img.shields.io/badge/No%20Backend-100%25%20Client--Side-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-**TubeAI** est une application web 100% client-side qui analyse n'importe quelle chaîne YouTube et génère des conseils personnalisés grâce à l'IA Claude d'Anthropic. Elle t'aide aussi à créer des titres optimisés et des hashtags pour tes Shorts.
+**TubeAI** est une application web 100% client-side qui analyse n'importe quelle chaîne YouTube, génère des conseils IA personnalisés, compare des chaînes et optimise ton contenu — propulsée par **Groq AI (LLaMA 3.3 70B, gratuit)**.
 
 ---
 
 ## ✨ Fonctionnalités
 
-### 📊 Analyse de chaîne
-- Colle n'importe quel lien YouTube (`@handle`, `/channel/UC...`, `/c/...`)
-- Statistiques détaillées : abonnés, vues totales, nombre de vidéos, vues moyennes par vidéo
-- Affichage des 10 dernières vidéos avec leurs stats (vues, likes, commentaires)
-- Détection automatique des **Shorts** vs vidéos longues
+### 📊 Analyse complète de chaîne
+- Tous les formats d'URL : `@handle`, `/channel/UC...`, `/c/...`, nom direct
+- **Score de chaîne /100** basé sur l'engagement, la cohérence et la croissance
+- Statistiques : abonnés, vues totales, vues moyennes/vidéo, taux d'engagement
+- Badges de performance (Excellent / Moyen / Faible)
+- 15 dernières vidéos avec taux d'engagement individuel et lien cliquable
+- Détection automatique Shorts vs vidéos longues
+- Historique des 6 dernières chaînes analysées
 
-### 🤖 Conseils IA (Claude)
-- Analyse complète de ta chaîne par Claude
-- Forces et points d'amélioration identifiés
-- Stratégie de contenu personnalisée
-- La priorité n°1 actionnable pour ta croissance
+### 📈 Graphiques interactifs
+- 4 graphiques : Vues, Likes, Commentaires, Taux d'engagement
+- Labels avec titre tronqué des vidéos
+- Tooltip riche : titre complet, date de publication + métriques croisées
+- Barre maximale mise en évidence automatiquement
+- **S'adapte automatiquement au thème clair/sombre**
 
-### 🎯 Générateur de titre + hashtags
-- Donne une description de ta vidéo → Claude génère **3 titres optimisés CTR**
-- Pour les **Shorts** : génère automatiquement **15 hashtags** pertinents
-- Explication psychologique du pourquoi ces titres fonctionnent
-- Copie en un clic
+### 🔍 Analyse SEO par vidéo *(NOUVEAU)*
+- Score SEO lettre (A/B/C/D) pour chaque vidéo
+- Vérification : longueur du titre, description, nombre de tags, qualité de miniature, engagement
+- Indicateurs visuels vert/jaune/rouge par critère
+- Actionnable : chaque problème est expliqué avec la correction à apporter
+
+### 🤖 Conseils IA personnalisés
+- Analyse structurée : résumé, points forts, axes d'amélioration, stratégie, priorité #1
+- Basé sur tes vraies données YouTube
+
+### 💡 Idées de vidéos générées par l'IA
+- 9 idées personnalisées selon ta niche et tes dernières vidéos
+- Types variés : Long, Short, Série, Tuto, Challenge, Vlog, Analyse, Réaction, Tendance
+- Bouton **Copier** le titre
+- Bouton **Développer** → envoie l'idée au Chat IA avec demande de plan détaillé
+
+### ⚖️ Comparaison de deux chaînes *(NOUVEAU)*
+- Entre deux URLs ou handles, compare côte à côte
+- Tableau comparatif : abonnés, vues, vidéos, vues moy/vidéo, engagement, score global
+- Barres de progression visuelles
+- Badge "Meilleur score" pour le gagnant
+- Conclusion automatique par l'app
+
+### 🔔 Alertes de performance *(NOUVEAU)*
+- Générées automatiquement après chaque analyse
+- Détecte : vidéo qui surperforme, sous-performance, excellent engagement global, manque de Shorts, ratio Shorts/longs déséquilibré
+- Alertes persistantes (localStorage) avec compteur dans le header
+- Possibilité d'ignorer chaque alerte individuellement ou tout effacer
+
+### 📄 Export PDF *(NOUVEAU)*
+- Exporte un rapport complet en HTML (imprimable en PDF via Ctrl+P)
+- Contient : infos chaîne, score, stats, analyse IA complète, liste des vidéos
+- Nom de fichier automatique avec nom de la chaîne et date
+
+### 💬 Chat IA contextuel
+- Conversation avec Groq AI (LLaMA 3.3 70B)
+- Contexte automatique si une chaîne a été analysée
+- Historique de 12 messages
+- Suggestions rapides cliquables
+- Le bouton "Développer" des idées envoie directement ici
+
+### ✍️ Générateur de titres & hashtags
+- 3 titres optimisés CTR + score CTR /10
+- 15 hashtags pour les Shorts
+- Explication psychologique
+- Multilingue : FR / EN / ES / PT
+
+### 🌙 Mode sombre / clair *(NOUVEAU)*
+- Bouton en haut à droite pour basculer
+- Préférence sauvegardée dans le navigateur
+- Graphiques, couleurs et fonds s'adaptent automatiquement
 
 ---
 
-## 🚀 Installation & Utilisation
+## 🚀 Utilisation
 
-### Option 1 — Ouvrir directement dans le navigateur
+### GitHub Pages
+👉 **[fozylll.github.io/YouTubeAnalyzer](https://fozylll.github.io/YouTubeAnalyzer)**
 
+### En local
 ```bash
-git clone https://github.com/ton-username/tubeai.git
-cd tubeai
-# Ouvre index.html dans ton navigateur (double-clic)
+git clone https://github.com/fozylll/YouTubeAnalyzer.git
+cd YouTubeAnalyzer
+# Ouvrir index.html dans le navigateur
+python3 -m http.server 8080   # ou double-clic sur index.html
 ```
-
-> ⚠️ Pour que les appels à l'API Claude fonctionnent depuis un fichier local (`file://`), tu dois ouvrir le fichier via un serveur local (voir Option 2).
-
-### Option 2 — Via un serveur local (recommandé)
-
-```bash
-# Python
-python3 -m http.server 8080
-
-# Node.js
-npx serve .
-
-# VS Code
-# Installe l'extension "Live Server" et clique sur "Go Live"
-```
-
-Puis ouvre `http://localhost:8080` dans ton navigateur.
 
 ---
 
 ## 🔑 Configuration des clés API
 
-L'app nécessite **2 clés API** saisies directement dans l'interface :
+Au premier lancement, la fenêtre de configuration s'ouvre automatiquement.
+Les clés sont sauvegardées dans `localStorage` — **tu n'as à les entrer qu'une seule fois**.
 
-### 1. Clé API YouTube Data v3 (gratuit)
+Le bouton **Config** devient vert 🟢 quand les deux clés sont configurées.
 
-1. Va sur [Google Cloud Console](https://console.cloud.google.com/)
-2. Crée un projet → Bibliothèque d'APIs → Active **"YouTube Data API v3"**
-3. Credentials → Créer des identifiants → **Clé API**
-4. (Optionnel) Restreins la clé aux origines HTTP autorisées
+### 1. Clé YouTube Data v3 — Gratuit
+1. [Google Cloud Console](https://console.cloud.google.com/) → Bibliothèque → Active **YouTube Data API v3**
+2. Identifiants → Créer une **Clé API**
+3. (Recommandé) Restreins-la à ton domaine GitHub Pages
 
-### 2. Clé API Anthropic (Claude)
+> Quota gratuit : 10 000 unités/jour. Une analyse complète ≈ 20 unités.
 
-1. Crée un compte sur [aistudio.google.com](https://aistudio.google.com/)
-2. Paramètres → API Keys → **Créer une clé**
-3. Assure-toi d'avoir du crédit sur ton compte
+### 2. Clé Groq AI — 100% Gratuit
+1. [console.groq.com](https://console.groq.com) → API Keys → Create API Key
+2. Clé commence par `gsk_...`
 
-> 🔒 **Sécurité** : Les clés sont stockées dans `localStorage` de ton navigateur. Elles ne sont jamais envoyées à un serveur tiers. L'app est 100% client-side.
+> Modèle : `llama-3.3-70b-versatile` · Quota : ~6000 tokens/min, sans limite journalière stricte.
+
+> 🔒 Tes clés restent dans ton navigateur. Elles ne transitent jamais par un serveur tiers.
 
 ---
 
-## 📁 Structure du projet
+## 🏗️ Structure du projet
 
 ```
-tubeai/
-├── index.html      # Structure HTML de l'application
-├── style.css       # Styles (design sombre, typographie Bebas Neue)
-├── app.js          # Logique principale (YouTube API + Claude API)
+YouTubeAnalyzer/
+├── index.html      # Application complète (HTML + CSS + JS en un seul fichier)
 └── README.md       # Ce fichier
 ```
 
@@ -94,45 +135,39 @@ tubeai/
 
 | Technologie | Usage |
 |-------------|-------|
-| HTML/CSS/JS vanilla | Aucune dépendance, aucun build |
-| [YouTube Data API v3](https://developers.google.com/youtube/v3) | Statistiques chaîne & vidéos |
-| [Google Gemini API](https://docs.anthropic.com/) | Conseils IA & génération de titres |
-| Google Fonts (Bebas Neue + DM Sans) | Typographie |
+| HTML / CSS / JS vanilla | Zéro dépendance, zéro build |
+| [YouTube Data API v3](https://developers.google.com/youtube/v3) | Stats chaîne, vidéos, playlists |
+| [Groq API](https://console.groq.com) — LLaMA 3.3 70B | Conseils IA, idées, titres, chat |
+| [Chart.js 4.4](https://www.chartjs.org/) | Graphiques interactifs (CDN) |
+| Google Fonts — Syne + Instrument Sans + DM Mono | Typographie |
 
 ---
 
 ## ⚙️ Fonctionnement technique
 
-### Résolution de chaîne
-L'app accepte plusieurs formats d'URL :
-- `https://youtube.com/@MaChaîne`
-- `https://youtube.com/channel/UCxxxxxxxx`
-- `https://youtube.com/c/MaChaîne`
-- `@MaChaîne` (sans URL)
+### Score de chaîne /100
+Calculé localement : ratio vues/abonnés, taux d'engagement moyen, nombre de vidéos, taille de la communauté.
+
+### Score SEO par vidéo
+Vérifie : longueur du titre (idéal 40-70 car.), longueur de description (min 150 car.), nombre de tags (min 5), qualité de miniature, taux d'engagement. Grade de A à D.
+
+### Alertes de performance
+Détectées automatiquement après chaque analyse : vidéo qui surperforme (+80% au-dessus de la moyenne), sous-performance (<0.5% engagement), absence de Shorts, déséquilibre Shorts/longs, engagement exceptionnel ou faible global.
+
+### Export PDF
+Génère un fichier HTML complet contenant le rapport. L'utilisateur peut l'imprimer en PDF via le menu d'impression du navigateur (Ctrl+P → Enregistrer en PDF).
 
 ### Détection des Shorts
-Un Short est détecté si la durée ISO 8601 de la vidéo est ≤ 60 secondes.
-
-### Appels API Claude
-Les appels se font directement depuis le navigateur vers `api.anthropic.com/v1/messages` avec l'en-tête `
+Durée ISO 8601 < 2 minutes.
 
 ---
 
-## 📋 Limitations connues
+## 📋 Limitations
 
-- **Quota YouTube API** : 10 000 unités/jour sur le plan gratuit. Une analyse coûte ~10-20 unités.
-- **CORS Claude API** : L'accès direct depuis le navigateur nécessite l'en-tête spécifique. Pour la production, mets un backend simple (Cloudflare Worker, Vercel Edge Function...).
-- **Vidéos privées** : Non accessibles via l'API publique.
-- **Historique complet** : L'API récupère les 10 dernières vidéos. Modifiable dans `app.js` (paramètre `maxResults`).
-
----
-
-## 🔧 Personnalisation
-
-Dans `app.js`, tu peux modifier :
-- `maxResults` dans `fetchRecentVideos()` : nombre de vidéos récupérées (max 50)
-- Le modèle Claude dans `callClaude()` : `claude-sonnet-4-20250514`
-- Le `max_tokens` pour des analyses plus longues
+- **Vidéos privées** : non accessibles via l'API publique YouTube
+- **Quota YouTube** : 10 000 unités/jour — suffisant pour ~400 analyses
+- **Quota Groq** : 6000 tokens/minute, largement suffisant pour un usage normal
+- **SEO Tags** : les tags ne sont visibles via l'API que pour les vidéos de ta propre chaîne (ou si publics)
 
 ---
 
@@ -142,15 +177,4 @@ MIT — Utilise, modifie, distribue librement.
 
 ---
 
-## 🤝 Contributions
-
-Les PRs sont les bienvenues ! Idées de features :
-- [ ] Export PDF du rapport
-- [ ] Comparaison de deux chaînes
-- [ ] Historique des analyses
-- [ ] Analyse de la concurrence
-- [ ] Score de SEO par vidéo
-
----
-
-*Fait avec ❤️ et Gemini AI*
+*Fait avec ❤️ — Propulsé par Groq AI (LLaMA 3.3) × YouTube Data API v3*
